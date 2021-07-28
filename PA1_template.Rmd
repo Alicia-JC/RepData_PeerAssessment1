@@ -7,19 +7,101 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```{r echo=TRUE}
+library(dplyr)
+library(ggplot2)
+activity <- read.csv("activity.csv")
+summary(activity)
+```
 
 
 ## What is mean total number of steps taken per day?
+First we have to process the data before analysing it to answer the question. 
 
+```{r echo=TRUE}
+activity$date <- as.Date(activity$date)
+```
+
+Now we sum the number of steps per day using the function tapply. Next I create the histogram.
+```{r echo=TRUE}
+stepsday <- tapply(activity$steps, activity$date, sum, na.rm=TRUE)
+hist(stepsday, breaks=10, col="darkgreen",main="Histogram of steps per day", xlab="Steps per day")
+```
+
+```{r echo=TRUE}
+stepsmean <- mean(stepsday)
+stepsmedian <- median(stepsday)
+```
+The mean of the total steps per day is `r stepsmean`. The median is `r stepsmedian`.
+ 
 
 
 ## What is the average daily activity pattern?
+ 
+```{r echo=TRUE}
+intervsteps <- tapply(activity$steps, activity$interval, mean, na.rm=TRUE)
+plot(names(intervsteps), intervsteps, type="l", main = "Average number of steps per interval", ylab="Steps", xlab="Interval")
+
+``` 
+
+```{r echo=TRUE}
+intervmax <- max(intervsteps)
+nameintervmax <- names(intervsteps[intervmax])
+```
+
+The interval with the highest average number of steps is `r nameintervmax`.
 
 
 
 ## Imputing missing values
 
+```{r echo=TRUE}
+
+numNA <- sum(is.na(activity$steps))
+```
+The total number of missing (NA) values is `r numNA`.
+
+We're going to substitute all the missing values for the mean of steps.
+
+```{r echo=TRUE}
+intervmean <- mean(activity$steps, na.rm=TRUE)
+actifill <- activity
+for(i in 1:nrow(actifill)) {
+        if(is.na(actifill$steps[i])) {
+                actifill$steps[i] <- intervmean
+        }
+}
+
+stepsfilledday <- tapply(actifill$steps,actifill$date,sum)
+
+hist(stepsfilledday, main="Steps per day", xlab="Number of steps")
+```
+```{r echo=TRUE}
+meanfilled <- mean(stepsfilledday)
+medfilled <- median(stepsfilledday)
+
+```
+The mean steps per day is now `r meanfilled`, and the median is `r medfilled`. Both values have increased and in fact now have the same value.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r echo=TRUE}
+
+actifill$weekday <- ifelse(weekdays(actifill$date) == "sábado" | weekdays(actifill$date) == "domingo", "weekend", "weekday")
+
+
+daystep <- filter(actifill, actifill$weekday=="weekday")
+daystep2 <- tapply(daystep$steps,daystep$interval,mean)
+
+endstep <- filter(actifill, actifill$weekday=="weekend")
+
+endstep2 <- tapply(endstep$steps,endstep$interval,mean)
+
+par(mfrow=c(2,1))
+plot(names(endstep2),endstep2, type="l", main="Mean steps per interval, Weekend", xlab="Steps", ylab="Interval")
+plot(names(daystep2),daystep2, type="l", main="Mean steps per interval, Weekdays", xlab="Steps", ylab="Interval")
+
+
+```
+
