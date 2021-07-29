@@ -10,6 +10,7 @@ output:
 ```{r echo=TRUE}
 library(dplyr)
 library(ggplot2)
+library(knitr)
 activity <- read.csv("activity.csv")
 summary(activity)
 ```
@@ -105,5 +106,8 @@ plot(names(daystep2),daystep2, type="l", main="Mean steps per interval, Weekdays
 
 ```
 
+`
 
-
+```{r echo=TRUE}
+knit2html("PA1_template.Rmd")
+```
